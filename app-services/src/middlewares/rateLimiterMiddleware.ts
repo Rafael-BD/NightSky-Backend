@@ -14,6 +14,7 @@ export default async function rateLimiter(ctx: Context, next: () => Promise<unkn
     const blockedKey = `blocked:${ip}`; 
 
     const isBlocked = await kv.get([blockedKey]);
+    console.log(isBlocked);
 
     if (isBlocked) {
         ctx.response.status = 429;
@@ -32,6 +33,7 @@ export default async function rateLimiter(ctx: Context, next: () => Promise<unkn
         await kv.set([key], newRequestCount.toString(), { expireIn: WINDOW_DURATION }); 
     }
 
+    console.log(newRequestCount);
     if (newRequestCount > MAX_REQUESTS) {
         await kv.set([blockedKey], (currentTime + BLOCK_DURATION).toString(), { expireIn: BLOCK_DURATION }); 
         ctx.response.status = 429;
