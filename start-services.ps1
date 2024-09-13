@@ -1,3 +1,4 @@
+# PowerShell
 $servicesPath = "./app-services"
 
 $denoCommand = "deno run dev"
