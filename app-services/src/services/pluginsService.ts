@@ -1,4 +1,4 @@
-import { supabase } from "../../shared/utils/supabaseClient.ts";
+import { supabase } from "../../../shared/utils/supabaseClient.ts";
 
 /**
  * Fetches a list of plugins from the database.

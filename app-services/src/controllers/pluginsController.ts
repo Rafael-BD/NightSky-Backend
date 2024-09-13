@@ -1,6 +1,6 @@
 import { Context } from "https://deno.land/x/oak@v13.1.0/mod.ts";
 import { fetchPlugins, searchPluginsByName } from "../services/pluginsService.ts";
-import { sanitizeQueryParams } from "../../shared/utils/sanitizeInput.ts";
+import { sanitizeQueryParams } from "../../../shared/utils/sanitizeInput.ts";
 
 export async function getPlugins(ctx: Context) {
     try {
