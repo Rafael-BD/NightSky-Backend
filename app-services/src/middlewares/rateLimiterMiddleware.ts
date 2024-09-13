@@ -25,7 +25,7 @@ export default async function rateLimiter(ctx: Context, next: () => Promise<unkn
 
     const requestCount = await kv.get([key]);
     console.log(requestCount);
-    const newRequestCount = requestCount ? parseInt(String(requestCount.value), 10) + 1 : 1;
+    const newRequestCount = requestCount?.value ? parseInt(String(requestCount.value), 10) + 1 : 1;
 
     if (newRequestCount === 1) {
         await kv.set([key], newRequestCount.toString(), { expireIn: WINDOW_DURATION });
