@@ -1,2 +1,2 @@
 # Backend-App-Services
-Backend for mobile app services of OpenSky.
+Backend for mobile app services of NightSky.
