@@ -1,13 +1,11 @@
 import { Context } from "https://deno.land/x/oak@v13.1.0/mod.ts";
-import { sanitizeBody, sanitizeInput } from "../../../shared/utils/sanitizeInput.ts";
+import { sanitizeBody } from "../../../shared/utils/sanitizeInput.ts";
 import { checkIfExists, createStoreInDB, updateAccount, deleteAccountInDB } from "../services/storeService.ts";
 
 export async function checkIfUserExists(ctx: Context) {
     try {
-        const decodedToken = decodeURIComponent(ctx.request.url.searchParams.get("github_access_token") || "");
-        const sanitizedTk = sanitizeInput(decodedToken);
-        console.log("sanitized token", sanitizedTk);        
-        const status = await checkIfExists(sanitizedTk);
+        const decodedToken = decodeURIComponent(ctx.request.url.searchParams.get("github_access_token") || "");  
+        const status = await checkIfExists(decodedToken);
         ctx.response.status = status ? 200 : 404;
     }
     catch (error) {
@@ -22,7 +20,6 @@ export async function createStore(ctx: Context) {
         const { github_access_token } = sanitizedBody;
         const { name } = sanitizedBody;
         const status = await createStoreInDB(github_access_token, name);
-        console.log("store created", status);
         ctx.response.status = status ? 201 : 500;
     }
     catch (error) {
@@ -37,8 +34,8 @@ export async function updateStore(ctx: Context) {
         const sanitizedBody = await sanitizeBody(ctx);
         const { github_access_token } = sanitizedBody;
         const { name } = sanitizedBody;
-        const { id } = sanitizedBody;
-        const status = await updateAccount(name, github_access_token, id);
+        const { email } = sanitizedBody;
+        const status = await updateAccount(name, github_access_token, email || "");
         ctx.response.status = status ? 204 : 500;
     }
     catch (error) {
@@ -51,8 +48,7 @@ export async function deleteAccount(ctx: Context) {
     try {
         const sanitizedBody = await sanitizeBody(ctx);
         const { github_access_token } = sanitizedBody;
-        const { id } = sanitizedBody;
-        const status = await deleteAccountInDB(github_access_token, id);
+        const status = await deleteAccountInDB(github_access_token);
         ctx.response.status = status ? 204 : 500;
 
     }

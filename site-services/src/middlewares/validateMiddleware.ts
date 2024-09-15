@@ -7,7 +7,11 @@ export default async function validateMiddleware(ctx: Context, next: () => Promi
     const pathname = ctx.request.url.pathname;
 
     if (pathname === "/auth/checkuser") {
-        const github_access_token = ctx.request.url.searchParams.get("github_access_token");
+        let github_access_token = ctx.request.url.searchParams.get("github_access_token");
+        if (github_access_token) {
+            const decodedToken = atob(github_access_token);
+            github_access_token = decodedToken;
+        }
 
         const [passes] = await validate({ github_access_token }, {
             github_access_token: [required, isString],
