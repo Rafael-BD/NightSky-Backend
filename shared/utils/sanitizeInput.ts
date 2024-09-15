@@ -16,3 +16,21 @@ export function sanitizeQueryParams(ctx: Context): Record<string, string> {
 
     return sanitizedParams;
 }
+
+export async function sanitizeBody(ctx: Context): Promise<Record<string, string>> {
+    if(!ctx.request.hasBody) {
+        return {};
+    }
+    const body = await ctx.request.body.json();
+    const sanitizedBody: Record<string, string> = {};
+
+    for (const [key, value] of Object.entries(body)) {
+        sanitizedBody[key] = sanitize(value as string);
+    }
+
+    return sanitizedBody;
+}
+
+export function sanitizeInput(value: string): string {
+    return sanitize(value);
+}
