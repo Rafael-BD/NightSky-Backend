@@ -1,6 +1,6 @@
 import { Context } from "https://deno.land/x/oak@v13.1.0/mod.ts";
 import { sanitizeBody } from "../../../shared/utils/sanitizeInput.ts";
-import { checkIfExists, createStoreInDB, updateAccount, deleteAccountInDB } from "../services/storeService.ts";
+import { checkIfExists, createStoreInDB, updateAccount, deleteAccountInDB } from "../services/authService.ts";
 
 export async function checkIfUserExists(ctx: Context) {
     try {

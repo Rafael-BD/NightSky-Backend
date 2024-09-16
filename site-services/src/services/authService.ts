@@ -4,7 +4,7 @@ import { sanitizeInput } from "../../../shared/utils/sanitizeInput.ts";
 
 const GITHUB_API_USER_URL = 'https://api.github.com/user';
 
-async function getGithubUserId(encryptedToken: string): Promise<string> {
+export async function getGithubUserId(encryptedToken: string): Promise<string> {
     const token = decrypt(encryptedToken);
     const sanitizedToken = sanitizeInput(token);
     const response = await fetch(GITHUB_API_USER_URL, {
@@ -37,16 +37,37 @@ export async function checkIfExists(encryptedToken: string): Promise<boolean> {
     }
 }
 
+export async function checkIfNameExists(accountName: string): Promise<boolean> {
+    try {
+        const { count, error } = await supabase
+            .from('stores')
+            .select('name', { count: 'exact' })
+            .eq('name', accountName);
+
+        if (error) throw error;
+        return (count ?? 0) > 0;
+    } catch (error) {
+        console.error('Error validating account name:', error);
+        return false;
+    }
+}
+
 export async function createStoreInDB(encryptedToken: string, accountName: string): Promise<boolean> {
     try {
         const exists = await checkIfExists(encryptedToken);
         if (exists) return false;
 
+        let name = accountName;
+        const nameExists = await checkIfNameExists(accountName);
+        if (nameExists){
+            name = name + Math.floor(Math.random() * 1000);
+        }
+
         const id = await getGithubUserId(encryptedToken);
 
         const { status, error } = await supabase
             .from('stores')
-            .insert([{ github_id: id, name: accountName}]);
+            .insert([{ github_id: id, name: name}]);
 
         if (error) throw error;
         return status === 201;
@@ -57,12 +78,17 @@ export async function createStoreInDB(encryptedToken: string, accountName: strin
 }
 
 export async function updateAccount(accountName: string, encryptedToken: string, email: string): Promise<boolean> {
+    const exists = await checkIfExists(encryptedToken);
+    if (!exists) return false;
     const id = await getGithubUserId(encryptedToken);
 
     try {
+        const nameExists = await checkIfNameExists(accountName);
+        if (nameExists) return false;
+
         const { status, error } = await supabase
             .from('stores')
-            .update({ name: accountName, email: email })
+            .update({ name: name, email: email })
             .eq('github_id', id)
 
         if (error) throw error;

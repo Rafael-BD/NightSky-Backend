@@ -1,11 +1,5 @@
 import { supabase } from "../../../shared/utils/supabaseClient.ts";
 
-/**
- * Fetches a list of plugins from the database.
- * @param start - The start index of the range.
- * @param end - The end index of the range.
- * @returns A list of plugins.
- */
 export async function fetchPlugins(start: number, end: number) {
     const { data, error } = await supabase
         .from("plugins")
@@ -19,12 +13,6 @@ export async function fetchPlugins(start: number, end: number) {
     return data;
 }
 
-
-/**
- * Searches for plugins by name in the database.
- * @param query - The search query.
- * @returns A list of plugins that match the search query.
- */
 export async function searchPluginsByName(query: string) {
     const { data, error } = await supabase
         .from("plugins")
@@ -36,4 +24,16 @@ export async function searchPluginsByName(query: string) {
     }
 
     return data;
+}
+
+export async function fetchCategories() {
+    const { data, error } = await supabase
+        .from("categories")
+        .select("*");
+
+    if (error) {
+        throw new Error(error.message);
+    }
+    // deno-lint-ignore no-explicit-any
+    return data.map((category: any) => category.name);
 }

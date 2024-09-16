@@ -5,6 +5,7 @@ const kv = await Deno.openKv();
 const MAX_REQUESTS = 15;      
 const BLOCK_DURATION = 30;    
 const WINDOW_DURATION = 30;   
+// adicionar depois no .env e implementar metodo de timeout progressivo
 
 export default async function rateLimiter(ctx: Context, next: () => Promise<unknown>) {
     const ip = ctx.request.ip || ctx.request.headers.get('x-forwarded-for') || 'unknown';

@@ -6,7 +6,7 @@ import rateLimiter from "./middlewares/rateLimiterMiddleware.ts";
 const app = new Application();
 
 app.use(validateMiddleware);
-app.use(rateLimiter);
+// app.use(rateLimiter);
 
 app.use(pluginRoutes.routes());
 app.use(pluginRoutes.allowedMethods());

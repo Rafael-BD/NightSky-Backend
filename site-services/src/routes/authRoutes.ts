@@ -3,9 +3,9 @@ import { checkIfUserExists, createStore, deleteAccount, updateStore } from "../c
 
 const router = new Router();
 
-router.post("/auth/create-account", createStore)
-    .put("/auth/update-account", updateStore)
-    .get("/auth/checkuser", checkIfUserExists)
-    .delete("/auth/delete-account", deleteAccount);
+router.post("/auth/account", createStore)
+    .put("/auth/account", updateStore)
+    .get("/auth/account", checkIfUserExists)
+    .delete("/auth/account", deleteAccount);
 
 export default router;

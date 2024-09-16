@@ -1,5 +1,5 @@
 import { Context } from "https://deno.land/x/oak@v13.1.0/mod.ts";
-import { fetchPlugins, searchPluginsByName } from "../services/pluginsService.ts";
+import { fetchCategories, fetchPlugins, searchPluginsByName } from "../services/pluginsService.ts";
 import { sanitizeQueryParams } from "../../../shared/utils/sanitizeInput.ts";
 
 export async function getPlugins(ctx: Context) {
@@ -31,5 +31,15 @@ export async function searchPlugins(ctx: Context) {
     } catch (error) {
         ctx.response.status = 500;
         ctx.response.body = { error: "Error searching plugins: " + error.message };
+    }
+}
+
+export async function getCategories(ctx: Context) {
+    try {
+        const categories = await fetchCategories();
+        ctx.response.body = categories;
+    } catch (error) {
+        ctx.response.status = 500;
+        ctx.response.body = { error: "Error fetching categories: " + error.message };
     }
 }
