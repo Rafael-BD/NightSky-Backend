@@ -1,4 +1,4 @@
-import { Plugin } from "../../../shared/types.ts";
+import { Plugin, PluginPending } from "../../../shared/types.ts";
 import { supabaseSvc } from "../../../shared/utils/supabaseClient.ts";
 
 async function uploadPluginFileToBucket(plugin: Plugin): Promise<string | null> {
@@ -143,7 +143,7 @@ export async function rejectPlugin(repo_id: string, owner: string): Promise<bool
     }
 }
 
-export async function getPluginsPending(): Promise<Plugin[] | null> {
+export async function getPluginsPending(): Promise<PluginPending[] | null> {
     try {
         const { data, error } = await supabaseSvc
             .from("plugins_pending")

@@ -1,6 +1,6 @@
 import { getPluginsPending, updateAnalysis } from "../services/services.ts";
 import { AstAnalyser } from "npm:@nodesecure/js-x-ray";
-import { Plugin } from "../../../shared/types.ts";
+import { PluginPending } from "../../../shared/types.ts";
 import { download } from "https://deno.land/x/download@v2.0.2/mod.ts";
 import { decompress, compress } from "https://deno.land/x/zip@v1.2.5/mod.ts";
 import { join } from "https://deno.land/std@0.224.0/path/mod.ts";
@@ -17,7 +17,7 @@ export default async function analyzer() {
             return;
         }
 
-        const firstPluginStatusZero = pluginsPending.find((plugin) => plugin.status === 0);
+        const firstPluginStatusZero = pluginsPending.find((plugin) => plugin.status_analysis === 0);
         if (!firstPluginStatusZero) {
             console.log("No pending plugins found.");
             return;
@@ -26,7 +26,7 @@ export default async function analyzer() {
         (await Deno.stat(EXTRACT_PATH)).isDirectory || Deno.mkdir(EXTRACT_PATH);
         (await Deno.stat(DOWNLOAD_PATH)).isDirectory || Deno.mkdir(DOWNLOAD_PATH);
 
-        const plugin = firstPluginStatusZero as Plugin;
+        const plugin = firstPluginStatusZero as PluginPending;
         const repoUrl = plugin.repo_url;
         const branch = plugin.branch;
         const zipUrl = `${repoUrl}/archive/refs/heads/${branch}.zip`;
