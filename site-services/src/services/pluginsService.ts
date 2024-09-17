@@ -2,7 +2,7 @@ import { Plugin, Repo } from './../../../shared/types.ts';
 import { supabaseSvc as supabase } from "../../../shared/utils/supabaseClient.ts";
 import { decrypt } from "../../../shared/utils/security.ts";
 import { sanitizeInput } from "../../../shared/utils/sanitizeInput.ts";
-import { getGithubUserId } from "./authService.ts";
+import { getGithubUserId } from "../../../shared/utils/getGithubId.ts";
 import areValidCategories from "../utils/validateCategories.ts";
 
 const GITHUB_API_USER_URL = 'https://api.github.com/user';

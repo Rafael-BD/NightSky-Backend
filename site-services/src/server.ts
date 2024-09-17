@@ -2,7 +2,7 @@ import { Application } from "https://deno.land/x/oak@v13.1.0/mod.ts";
 import pluginRoutes from "./routes/pluginsRoutes.ts";
 import authRoutes from "./routes/authRoutes.ts";
 import validateMiddleware from "./middlewares/validateMiddleware.ts";
-import rateLimiter from "./middlewares/rateLimiterMiddleware.ts";
+import rateLimiter from "../../shared/utils/rateLimiterMiddleware.ts";
 
 const app = new Application();
 

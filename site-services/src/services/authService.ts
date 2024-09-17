@@ -1,25 +1,5 @@
 import { supabaseSvc as supabase } from "../../../shared/utils/supabaseClient.ts";
-import {decrypt} from "../../../shared/utils/security.ts";
-import { sanitizeInput } from "../../../shared/utils/sanitizeInput.ts";
-
-const GITHUB_API_USER_URL = 'https://api.github.com/user';
-
-export async function getGithubUserId(encryptedToken: string): Promise<string> {
-    const token = decrypt(encryptedToken);
-    const sanitizedToken = sanitizeInput(token);
-    const response = await fetch(GITHUB_API_USER_URL, {
-        headers: {
-            Authorization: `Bearer ${sanitizedToken}`,
-        },
-    });
-    const data = await response.json();
-
-    if(response.status !== 200) {
-        console.log(response)
-        throw new Error('Error fetching GitHub user ID');
-    }
-    return data.id;
-}
+import { getGithubUserId } from "../../../shared/utils/getGithubId.ts"
 
 export async function checkIfExists(encryptedToken: string): Promise<boolean> {
     const userID = await getGithubUserId(encryptedToken);

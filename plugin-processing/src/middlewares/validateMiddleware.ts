@@ -1,37 +1,25 @@
 import { Context } from "https://deno.land/x/oak@v13.1.0/mod.ts";
 import { validate, required, isString } from "https://deno.land/x/validasaur@v0.15.0/mod.ts";
 import { isEscape } from "https://deno.land/x/escape@1.4.2/mod.ts";
+import { validateAdminToken } from  "../../../shared/utils/validateToken.ts";
 
 
 export default async function validateMiddleware(ctx: Context, next: () => Promise<unknown>) {
     const url = ctx.request.url;
-    const pathname = url.pathname;
-    const query = url.searchParams.get("query");
-    const start = url.searchParams.get("start");
-    const end = url.searchParams.get("end");
+    const token = ctx.request.headers.get("Authorization")?.toString() || "";
 
-    if (pathname === "/plugins/search" && query !== null) {
-        const [passes] = await validate({ query }, {
-            query: [required, isString],
-        });
-
-
-        if (!passes || isEscape(query)) {
-            ctx.response.status = 200;
-            ctx.response.body = [];
-            return;
-        }
+    const [passes] = await validate({ value: token }, { value: [required, isString] });
+    if(isEscape(token) || !passes) {
+        ctx.response.status = 400;
+        ctx.response.body = { error: "Invalid token" };
+        return;
     }
 
-    if (pathname === "/plugins" && start !== null && end !== null) {
-        const [passes] = await validate({ start, end }, {
-            start: [required, isString],
-            end: [required, isString],
-        });
-
-        if (!passes || isEscape(start) || isEscape(end)) {
-            ctx.response.status = 200;
-            ctx.response.body = [];
+    if (url.pathname === "admin/plugins/approve" || url.pathname === "admin/plugins/reject" || url.pathname === "admin/plugins/pending") {
+        const isValidToken = await validateAdminToken(token);
+        if (!isValidToken) {
+            ctx.response.status = 401;
+            ctx.response.body = { error: "Unauthorized" };
             return;
         }
     }

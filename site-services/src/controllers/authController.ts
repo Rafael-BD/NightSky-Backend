@@ -19,7 +19,7 @@ export async function createStore(ctx: Context) {
         const sanitizedBody = await sanitizeBody(ctx);
         const { github_access_token } = sanitizedBody;
         const { name } = sanitizedBody;
-        const status = await createStoreInDB(github_access_token, name);
+        const status = await createStoreInDB(github_access_token as string, name as string);
         ctx.response.status = status ? 201 : 500;
     }
     catch (error) {
@@ -35,7 +35,7 @@ export async function updateStore(ctx: Context) {
         const { github_access_token } = sanitizedBody;
         const { name } = sanitizedBody;
         const { email } = sanitizedBody;
-        const status = await updateAccount(name, github_access_token, email || "");
+        const status = await updateAccount(name as string, github_access_token as string, (email || "") as string);
         ctx.response.status = status ? 204 : 500;
     }
     catch (error) {
@@ -48,7 +48,7 @@ export async function deleteAccount(ctx: Context) {
     try {
         const sanitizedBody = await sanitizeBody(ctx);
         const { github_access_token } = sanitizedBody;
-        const status = await deleteAccountInDB(github_access_token);
+        const status = await deleteAccountInDB(github_access_token as string);
         ctx.response.status = status ? 204 : 500;
 
     }

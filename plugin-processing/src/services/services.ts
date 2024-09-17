@@ -11,7 +11,7 @@ async function uploadPluginFileToBucket(plugin: Plugin): Promise<string | null> 
             console.error('Error getting file path for plugin from env:', plugin.plugin_name);
             return null;
         }
-        
+
         const file = new File([await Deno.readFile(filePath)], plugin.plugin_name);
         
         const { data, error } = await supabaseSvc.storage
@@ -44,13 +44,13 @@ async function uploadPluginFileToBucket(plugin: Plugin): Promise<string | null> 
     }
 }
 
-export async function aprovePlugin(pluginToAprove: Plugin): Promise<boolean> {
+export async function approvePlugin(repo_id: string, owner: string): Promise<boolean> {
     try {
         const { data: pluginsPending, error: errorPending } = await supabaseSvc
             .from("plugins_pending")
             .select("*")
-            .eq("repo_id", pluginToAprove.repo_id)
-            .eq("owner", pluginToAprove.owner);
+            .eq("repo_id", repo_id)
+            .eq("owner", owner);
 
         if (errorPending || !pluginsPending || pluginsPending.length === 0) {
             throw new Error(errorPending?.message || "Plugin not found");
@@ -61,8 +61,8 @@ export async function aprovePlugin(pluginToAprove: Plugin): Promise<boolean> {
         const { data: plugins, error: errorPlugins } = await supabaseSvc
             .from("plugins")
             .select("*")
-            .eq("repo_id", pluginToAprove.repo_id)
-            .eq("owner", pluginToAprove.owner);
+            .eq("repo_id", repo_id)
+            .eq("owner", owner);
 
         if (errorPlugins) {
             throw new Error(errorPlugins.message);
@@ -110,8 +110,8 @@ export async function aprovePlugin(pluginToAprove: Plugin): Promise<boolean> {
         const { error: errorDelete } = await supabaseSvc
             .from("plugins_pending")
             .delete()
-            .eq("repo_id", pluginToAprove.repo_id)
-            .eq("owner", pluginToAprove.owner);
+            .eq("repo_id", repo_id)
+            .eq("owner", owner);
 
         if (errorDelete) {
             throw new Error(errorDelete.message);
