@@ -164,7 +164,7 @@ export async function updateAnalysis(plugin_id: string, analysis: Record<string,
     try {
         const { error } = await supabaseSvc
             .from("plugins_pending")
-            .update({ analysis: analysis, status: status })
+            .update({ analysis_result: analysis, status_analysis: status })
             .eq("plugin_id", plugin_id);
 
         if (error) {

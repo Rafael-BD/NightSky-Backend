@@ -6,7 +6,7 @@ import { getGithubUserId } from "../../../shared/utils/getGithubId.ts";
 import areValidCategories from "../utils/validateCategories.ts";
 
 const GITHUB_API_USER_URL = 'https://api.github.com/user';
-const GITHUB_API_REPOS_URL = 'https://api.github.com/search/repositories?q=user:';
+const GITHUB_API_REPOS_URL = 'https://api.github.com/user/repos';
 
 import { PostgrestError } from "npm:@supabase/supabase-js@2.45.4";
 
@@ -91,19 +91,14 @@ export const getUserReposSvc = async (githubAccessToken: string): Promise<Repo[]
     const decryptedToken = decrypt(githubAccessToken);
     const sanitizedToken = sanitizeInput(decryptedToken);
 
-    const response = await fetch(GITHUB_API_USER_URL, {
+    const reposResponse = await fetch(`${GITHUB_API_REPOS_URL}`, {
         headers: {
-            Authorization: `token ${sanitizedToken}`,
-        },
-    });
-    const user = await response.json();
-    const reposResponse = await fetch(`${GITHUB_API_REPOS_URL}${user.login}`, {
-        headers: {
-            Authorization: `token ${sanitizedToken}`,
+            Authorization: `Bearer ${sanitizedToken}`,
         },
     });
     const repos = await reposResponse.json();
-    return repos.items;
+    console.log(repos);
+    return repos;
 };
 
 export const fetchStorePluginsSvc = async (githubAccessToken: string) => {
@@ -112,9 +107,19 @@ export const fetchStorePluginsSvc = async (githubAccessToken: string) => {
         .from('plugins')
         .select('*')
         .eq('owner', uuid);
+        const { data: pluginsPending, error: errorPending } = await supabase
+            .from('plugins_pending')
+            .select('*')
+            .eq('owner', uuid);
+
+        if (handleSupabaseError(errorPending, 'Error fetching pending store plugins')) return [];
+
+        const combinedData = [...(data ?? []), ...(pluginsPending ?? [])];
 
     if (handleSupabaseError(error, 'Error fetching store plugins')) return [];
-    return data;
+
+    
+    return combinedData;
 };
 
 export const createPluginSvc = async (githubAccessToken: string, name: string, repoId: string, categories: string[], branch: string): Promise<boolean> => {
