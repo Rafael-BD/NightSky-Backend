@@ -23,8 +23,8 @@ export default async function analyzer() {
             return;
         }
 
-        (await Deno.stat(EXTRACT_PATH)).isDirectory || Deno.mkdir(EXTRACT_PATH);
-        (await Deno.stat(DOWNLOAD_PATH)).isDirectory || Deno.mkdir(DOWNLOAD_PATH);
+        await Deno.stat(EXTRACT_PATH).catch(() => Deno.mkdir(EXTRACT_PATH, { recursive: true }));
+        await Deno.stat(DOWNLOAD_PATH).catch(() => Deno.mkdir(DOWNLOAD_PATH, { recursive: true }));
 
         const plugin = firstPluginStatusZero as PluginPending;
         const repoUrl = plugin.repo_url;
