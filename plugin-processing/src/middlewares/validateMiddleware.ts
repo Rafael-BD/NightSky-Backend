@@ -11,7 +11,7 @@ export default async function validateMiddleware(ctx: Context, next: () => Promi
     const [passes] = await validate({ value: token }, { value: [required, isString] });
     if(isEscape(token) || !passes) {
         ctx.response.status = 400;
-        ctx.response.body = { error: "Invalid token" };
+        ctx.response.body = { error: "Invalid token" }; 
         return;
     }
 
