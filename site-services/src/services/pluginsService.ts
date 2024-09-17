@@ -137,7 +137,7 @@ export const createPluginSvc = async (githubAccessToken: string, name: string, r
     if (!uuid || !repoUrl) return false;
 
     const { error } = await supabase
-        .from('plugins')
+        .from('plugins_pending')
         .insert([{ plugin_name: name, repo_id: repoId, owner: uuid, categories, repo_url: repoUrl, branch }]);
 
     if (handleSupabaseError(error, 'Error creating plugin')) return false;
@@ -164,10 +164,10 @@ export const updatePluginSvc = async (githubAccessToken: string, name: string, p
     if (!plugin) return false;
     const newVersion = (plugin as { version: number }).version + 1;
 
+    // Insert new version into plugins_pending for review
     const { error } = await supabase
-        .from('plugins')
-        .update({ plugin_name: name, categories, branch, updated_at: updateTimestampz, repo_url: repoUrl, repo_id: repoId, version: newVersion })
-        .eq('plugin_id', plugin_id);
+        .from('plugins_pending')
+        .insert([{ plugin_name: name, categories, branch, updated_at: updateTimestampz, repo_url: repoUrl, repo_id: repoId, version: newVersion }])
 
     if (handleSupabaseError(error, 'Error updating plugin')) return false;
     return true;
