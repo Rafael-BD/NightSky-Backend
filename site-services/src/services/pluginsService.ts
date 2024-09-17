@@ -107,7 +107,7 @@ export const fetchStorePluginsSvc = async (githubAccessToken: string) => {
         .from('plugins')
         .select('*')
         .eq('owner', uuid);
-        const { data: pluginsPending, error: errorPending } = await supabase
+        const { data: pluginsPending, error: errorPending } = await supabase // TEMP
             .from('plugins_pending')
             .select('*')
             .eq('owner', uuid);
