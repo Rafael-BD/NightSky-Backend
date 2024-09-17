@@ -1,108 +1,181 @@
-import { PostgrestError } from 'npm:@supabase/supabase-js@2.45.4';
 import { Plugin } from "../../../shared/types.ts";
 import { supabaseSvc } from "../../../shared/utils/supabaseClient.ts";
 
+async function uploadPluginFileToBucket(plugin: Plugin): Promise<string | null> {
+    try {
+        const bucketName = 'Plugins';
+        const bucketPath = `${plugin.plugin_name}`;
+        const filePath = Deno.env.get("EXTRACT_PATH") + `/${plugin.plugin_name}.zip/`;
 
-export function aprovePlugin(repo_id: string, owner: string) {
-    return new Promise((resolve, reject) => {
-        supabaseSvc
-            .from("plugins_pending")
-            .select("*")
-            .eq("repo_id", repo_id)
-            .eq("owner", owner)
-            .then(({ data: pluginsPending, error: errorPending }: { data: Plugin[], error: PostgrestError }) => {
-                if (errorPending) {
-                    return reject(errorPending);
-                }
+        if(!filePath) {
+            console.error('Error getting file path for plugin from env:', plugin.plugin_name);
+            return null;
+        }
+        
+        const file = new File([await Deno.readFile(filePath)], plugin.plugin_name);
+        
+        const { data, error } = await supabaseSvc.storage
+            .from(bucketName)
+            .upload(bucketPath, file);
 
-                const pluginPending = pluginsPending[0];
+        if (error) {
+            throw error;
+        }
 
-                if (!pluginPending) {
-                    return reject(new Error("Plugin not found"));
-                }
+        if (data) {
+            const { data } = supabaseSvc.storage
+                .from(bucketName)
+                .getPublicUrl(filePath);
 
-                return supabaseSvc
-                    .from("plugins")
-                    .select("*")
-                    .eq("repo_id", repo_id)
-                    .eq("owner", owner)
-                    .then(({ data: plugins, error: errorPlugins }: { data: Plugin[], error: PostgrestError }) => {
-                        if (errorPlugins) {
-                            return reject(errorPlugins);
-                        }
+            if (!data) {
+                console.error('Error getting public URL for file:', file.name);
+                return null;
+            }
 
-                        const plugin = plugins[0];
-
-                        if (plugin) {
-                            return supabaseSvc
-                                .from("plugins")
-                                .update({
-                                    plugin_name: pluginPending.plugin_name,
-                                    categories: pluginPending.categories,
-                                    version: pluginPending.version,
-                                    updated_at: new Date().toISOString(),
-                                    repo_url: pluginPending.repo_url,
-                                    bucket_url: pluginPending.bucket_url, // Modificar depois para criar um novo bucket
-                                    status: 1,
-                                    branch: pluginPending.branch,
-                                })
-                                .eq("plugin_id", plugin.plugin_id)
-                                .then(({ error: errorUpdate }: { error: PostgrestError | null }) => {
-                                    if (errorUpdate) {
-                                        return reject(errorUpdate);
-                                    }
-                                });
-                        } else {
-                            return supabaseSvc
-                                .from("plugins")
-                                .insert({
-                                    plugin_name: pluginPending.plugin_name,
-                                    owner: pluginPending.owner,
-                                    categories: pluginPending.categories,
-                                    created_at: new Date().toISOString(),
-                                    repo_url: pluginPending.repo_url,
-                                    branch: pluginPending.branch,
-                                })
-                                .then(({ error: errorInsert }: { error: PostgrestError | null }) => {
-                                    if (errorInsert) {
-                                        return reject(errorInsert);
-                                    }
-                                });
-                        }
-                    })
-                    .then(() => {
-                        return supabaseSvc
-                            .from("plugins_pending")
-                            .delete()
-                            .eq("repo_id", repo_id)
-                            .eq("owner", owner)
-                            .then(({ error: errorDelete }: { error: PostgrestError | null }) => {
-                                if (errorDelete) {
-                                    return reject(errorDelete);
-                                }
-                                resolve(true);
-                            });
-                    });
-            })
-            .catch(reject);
-    });
+            console.log('File uploaded successfully:', file.name);
+            return data.publicUrl;
+        } else {
+            console.error('File upload failed: No data returned');
+            return null;
+        }
+    } catch (error) {
+        console.error('Error uploading file to bucket:', error);
+        return null;
+    }
 }
 
-export function rejectPlugin(repo_id: string, owner: string) {
-    return new Promise((resolve, reject) => {
-        supabaseSvc
+export async function aprovePlugin(pluginToAprove: Plugin): Promise<boolean> {
+    try {
+        const { data: pluginsPending, error: errorPending } = await supabaseSvc
+            .from("plugins_pending")
+            .select("*")
+            .eq("repo_id", pluginToAprove.repo_id)
+            .eq("owner", pluginToAprove.owner);
+
+        if (errorPending || !pluginsPending || pluginsPending.length === 0) {
+            throw new Error(errorPending?.message || "Plugin not found");
+        }
+
+        const pluginPending = pluginsPending[0];
+
+        const { data: plugins, error: errorPlugins } = await supabaseSvc
+            .from("plugins")
+            .select("*")
+            .eq("repo_id", pluginToAprove.repo_id)
+            .eq("owner", pluginToAprove.owner);
+
+        if (errorPlugins) {
+            throw new Error(errorPlugins.message);
+        }
+
+        const plugin = plugins ? plugins[0] : null;
+
+        const bucket_url = await uploadPluginFileToBucket(pluginPending);
+
+        if (plugin) {
+            const { error: errorUpdate } = await supabaseSvc
+                .from("plugins")
+                .update({
+                    plugin_name: pluginPending.plugin_name,
+                    categories: pluginPending.categories,
+                    version: pluginPending.version,
+                    updated_at: new Date().toISOString(),
+                    repo_url: pluginPending.repo_url,
+                    bucket_url: bucket_url,
+                    status: 1,
+                    branch: pluginPending.branch,
+                })
+                .eq("plugin_id", plugin.plugin_id);
+
+            if (errorUpdate) {
+                throw new Error(errorUpdate.message);
+            }
+        } else {
+            const { error: errorInsert } = await supabaseSvc
+                .from("plugins")
+                .insert({
+                    plugin_name: pluginPending.plugin_name,
+                    owner: pluginPending.owner,
+                    categories: pluginPending.categories,
+                    created_at: new Date().toISOString(),
+                    repo_url: pluginPending.repo_url,
+                    branch: pluginPending.branch,
+                });
+
+            if (errorInsert) {
+                throw new Error(errorInsert.message);
+            }
+        }
+
+        const { error: errorDelete } = await supabaseSvc
+            .from("plugins_pending")
+            .delete()
+            .eq("repo_id", pluginToAprove.repo_id)
+            .eq("owner", pluginToAprove.owner);
+
+        if (errorDelete) {
+            throw new Error(errorDelete.message);
+        }
+
+        return true;
+    } catch (error) {
+        console.error('Error approving plugin:', error);
+        return false;
+    }
+}
+
+export async function rejectPlugin(repo_id: string, owner: string): Promise<boolean> {
+    try {
+        const { error } = await supabaseSvc
             .from("plugins_pending")
             .delete()
             .eq("repo_id", repo_id)
-            .eq("owner", owner)
-            .then(({ error }: { error: PostgrestError | null }) => {
-                if (error) {
-                    return reject(error);
-                }
-                resolve(true);
-            })
-            .catch(reject);
-    });
+            .eq("owner", owner);
+
+        if (error) {
+            throw new Error(error.message);
+        }
+
+        return true;
+    } catch (error) {
+        console.error('Error rejecting plugin:', error);
+        return false;
+    }
+}
+
+export async function getPluginsPending(): Promise<Plugin[] | null> {
+    try {
+        const { data, error } = await supabaseSvc
+            .from("plugins_pending")
+            .select("*");
+
+        if (error) {
+            throw new Error(error.message);
+        }
+
+        return data;
+    } catch (error) {
+        console.error('Error fetching pending plugins:', error);
+        return null;
+    }
+}
+
+export async function updateAnalysis(plugin_id: string, analysis: Record<string, unknown>, status: number): Promise<boolean> {
+    try {
+        const { error } = await supabaseSvc
+            .from("plugins_pending")
+            .update({ analysis: analysis, status: status })
+            .eq("plugin_id", plugin_id);
+
+        if (error) {
+            throw error;
+        }
+
+        return true;
+    } catch (error) {
+        console.error('Error updating analysis:', error);
+        return false;
+    }
 }
 
 
