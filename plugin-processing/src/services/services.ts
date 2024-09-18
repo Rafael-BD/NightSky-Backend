@@ -1,40 +1,28 @@
 import { Plugin, PluginPending } from "../../../shared/types.ts";
 import { supabaseSvc } from "../../../shared/utils/supabaseClient.ts";
 
-export async function uploadPluginFileToPendingBucket(file: File): Promise<string | null> {
+export async function uploadPluginFileToPendingBucket(file: File): Promise<boolean> {
     try {
         const bucketName = 'plugins_pending';
         const bucketPath = file.name;
 
-        const { data, error } = await supabaseSvc.storage
+        const { error } = await supabaseSvc.storage
             .from(bucketName)
             .upload(bucketPath, file, {
                 contentType: 'application/zip'
             });
 
         if (error) {
-            throw error;
+            console.error('Error uploading file to bucket:', error);
+            return false;
         }
 
-        if (data) {
-            const { publicUrl } = supabaseSvc.storage
-                .from(bucketName)
-                .getPublicUrl(bucketPath);
-
-            if (!publicUrl) {
-                console.error('Error getting public URL for file:', file.name);
-                return null;
-            }
-
-            console.log('File uploaded successfully:', file.name);
-            return publicUrl;
-        } else {
-            console.error('File upload failed: No data returned');
-            return null;
-        }
+        console.log('File uploaded successfully:', file.name);
+        return true;
+        
     } catch (error) {
         console.error('Error uploading file to bucket:', error);
-        return null;
+        return false;
     }
 }
 
@@ -206,7 +194,8 @@ export async function updateAnalysis(plugin_id: string, analysis: Record<string,
             .eq("plugin_id", plugin_id);
 
         if (error) {
-            throw error;
+            console.error('Error updating analysis:', error);
+            return false;
         }
 
         return true;

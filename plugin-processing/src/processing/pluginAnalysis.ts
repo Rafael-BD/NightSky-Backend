@@ -64,7 +64,12 @@ export default async function analyzer() {
 
         const zipBlob = new Blob([zipUint8Array], { type: "application/zip" });
         const file = new File([zipBlob], `${plugin.plugin_name}.zip`, { type: "application/zip" });
-        const bucketUrl = await uploadPluginFileToPendingBucket(file);
+        const ok = await uploadPluginFileToPendingBucket(file);
+
+        if (!ok) {
+            console.error("Failed to upload ZIP file to bucket:", plugin.plugin_name);
+            return;
+        }
 
         const analysis = { analysisResult };
 
@@ -77,11 +82,6 @@ export default async function analyzer() {
             console.log("Failed to update analysis: ", plugin.plugin_name);
         }
 
-        if (bucketUrl) {
-            console.log("Plugin file uploaded successfully to pending bucket:", bucketUrl);
-        } else {
-            console.log("Failed to upload plugin file to pending bucket.");
-        }
     } catch (error) {
         console.error("Error analyzing plugin:", error);
     }
