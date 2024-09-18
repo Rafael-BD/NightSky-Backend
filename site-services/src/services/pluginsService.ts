@@ -114,10 +114,15 @@ export const fetchStorePluginsSvc = async (githubAccessToken: string) => {
 
         if (handleSupabaseError(errorPending, 'Error fetching pending store plugins')) return [];
 
-        const combinedData = [...(data ?? []), ...(pluginsPending ?? [])];
+        const dataPendingFiltered = pluginsPending?.map((plugin) => {
+            const { status_analysis: _status_analysis, ...rest } = plugin;
+            return rest;
+        });
+
+        const combinedData = data?.filter((plugin) => !dataPendingFiltered?.some((pending) => pending.repo_id === plugin.repo_id)) ?? [];
+        combinedData.push(...dataPendingFiltered ?? []);
 
     if (handleSupabaseError(error, 'Error fetching store plugins')) return [];
-
     
     return combinedData;
 };

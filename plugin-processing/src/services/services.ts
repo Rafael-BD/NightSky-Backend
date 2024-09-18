@@ -5,6 +5,7 @@ export async function uploadPluginFileToPendingBucket(file: File): Promise<boole
     try {
         const bucketName = 'plugins_pending';
         const bucketPath = file.name;
+        // Verificar depois se ja existe um arquivo com o mesmo nome (necessário mudar a indentificação do arquivo para um id único)
 
         const { error } = await supabaseSvc.storage
             .from(bucketName)
@@ -31,6 +32,7 @@ async function uploadPluginFileToBucket(plugin: Plugin): Promise<string | null> 
         const pendingBucketName = 'plugins_pending';
         const bucketName = 'Plugins';
         const bucketPath = `${plugin.plugin_name}.zip`;
+        // Verificar depois se ja existe um arquivo com o mesmo nome (necessário mudar a indentificação do arquivo para um id único)
 
         const { data, error } = await supabaseSvc.storage
             .from(pendingBucketName)
