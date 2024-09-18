@@ -4,7 +4,8 @@
     "specifiers": {
       "npm:@nodesecure/js-x-ray": "npm:@nodesecure/js-x-ray@8.0.0",
       "npm:@supabase/supabase-js@2.45.4": "npm:@supabase/supabase-js@2.45.4",
-      "npm:@types/node": "npm:@types/node@18.16.19"
+      "npm:@types/node": "npm:@types/node@18.16.19",
+      "npm:fflate": "npm:fflate@0.8.2"
     },
     "npm": {
       "@nodesecure/estree-ast-utils@1.5.0": {
@@ -134,6 +135,10 @@
         "dependencies": {
           "strnum": "strnum@1.0.5"
         }
+      },
+      "fflate@0.8.2": {
+        "integrity": "sha512-cPJU47OaAoCbg0pBvzsgpTPhmhqI5eJjh/JIu8tPj5q+T7iLvW/JAYUqmE7KOB4R1ZyEhzBaIQpQpardBF5z8A==",
+        "dependencies": {}
       },
       "frequency-set@1.0.2": {
         "integrity": "sha512-Qip6vS0fY/et08sZXumws05weoYvj2ZLkBq3xIwFDFLg8v5IMQiRa+P30tXL0CU6DiYUPLuN3HyRcwW6yWPdeA==",

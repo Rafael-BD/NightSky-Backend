@@ -27,13 +27,13 @@ export async function approve(ctx: Context) {
 export async function reject(ctx: Context) {
     try {
         const sanitizedBody = await sanitizeBody(ctx);
-        const { repo_id, owner } = sanitizedBody;
+        const { repo_id, owner, plugin_name } = sanitizedBody;
         if (!repo_id || !owner) {
             ctx.response.status = 400;
             ctx.response.body = { error: "Invalid request body" };
             return;
         }
-        const success = await rejectPlugin(String(repo_id), String(owner));
+        const success = await rejectPlugin(String(repo_id), String(owner), String(plugin_name));
         if (success) {
             ctx.response.body = { message: "Plugin rejected successfully" };
         } else {

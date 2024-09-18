@@ -1,8 +1,8 @@
 import { getPluginsPending, updateAnalysis, uploadPluginFileToPendingBucket } from "../services/services.ts";
 import { AstAnalyser } from "npm:@nodesecure/js-x-ray";
 import { PluginPending } from "../../../shared/types.ts";
-import { decompress } from "https://deno.land/x/zip@v1.2.5/mod.ts";
-
+import { download } from "https://deno.land/x/download@v2.0.2/mod.ts";
+import { unzipSync, strFromU8 } from "npm:fflate@0.8.2"
 export default async function analyzer() {
     try {
         const pluginsPending = await getPluginsPending();
@@ -30,8 +30,8 @@ export default async function analyzer() {
         const zipArrayBuffer = await response.arrayBuffer();
         const zipUint8Array = new Uint8Array(zipArrayBuffer);
 
-        // Extrair o conteúdo do ZIP em memória
-        const extractedFiles = await decompress(new TextDecoder().decode(zipUint8Array));
+        // Extrair o conteúdo do ZIP em memória usando fflate
+        const extractedFiles = unzipSync(zipUint8Array);
 
         console.log(`Extracted ZIP file: ${plugin.plugin_name}`);
 
@@ -39,7 +39,7 @@ export default async function analyzer() {
         const analysisResult = [];
         for (const [fileName, fileContent] of Object.entries(extractedFiles)) {
             if (fileName.endsWith(".js")) {
-                const analysis = analyser.analyse(new TextDecoder().decode(fileContent));
+                const analysis = analyser.analyse(strFromU8(fileContent));
                 analysisResult.push(analysis);
             }
         }
