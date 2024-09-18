@@ -1,10 +1,10 @@
 import { Plugin, PluginPending } from "../../../shared/types.ts";
 import { supabaseSvc } from "../../../shared/utils/supabaseClient.ts";
 
-export async function uploadPluginFileToPendingBucket(plugin: PluginPending, file: File): Promise<string | null> {
+export async function uploadPluginFileToPendingBucket(file: File): Promise<string | null> {
     try {
         const bucketName = 'plugins_pending';
-        const bucketPath = `${plugin.plugin_name}/${file.name}`;
+        const bucketPath = file.name;
 
         const { data, error } = await supabaseSvc.storage
             .from(bucketName)

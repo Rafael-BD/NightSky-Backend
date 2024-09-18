@@ -3,10 +3,8 @@ import { AstAnalyser } from "npm:@nodesecure/js-x-ray";
 import { PluginPending } from "../../../shared/types.ts";
 import { unzipSync, strFromU8 } from "npm:fflate@0.8.2";
 
-// Tipo para representar a estrutura dos arquivos extraídos
 type FileStructure = { [key: string]: FileStructure | Uint8Array };
 
-// Função recursiva para analisar todos os arquivos e pastas
 interface AnalysisResult {
     fileName: string;
     analysis: ReturnType<AstAnalyser['analyse']>;
@@ -39,6 +37,7 @@ export default async function analyzer() {
         }
 
         const firstPluginStatusZero = pluginsPending.find((plugin) => plugin.status_analysis === 0);
+
         if (!firstPluginStatusZero) {
             console.log("No pending plugins found.");
             return;
@@ -49,7 +48,6 @@ export default async function analyzer() {
         const branch = plugin.branch;
         const zipUrl = `${repoUrl}/archive/refs/heads/${branch}.zip`;
 
-        // Baixar o repositório como um arquivo ZIP em memória
         const response = await fetch(zipUrl);
         if (!response.ok) {
             throw new Error(`Failed to download ZIP file: ${response.statusText}`);
@@ -57,7 +55,6 @@ export default async function analyzer() {
         const zipArrayBuffer = await response.arrayBuffer();
         const zipUint8Array = new Uint8Array(zipArrayBuffer);
 
-        // Extrair o conteúdo do ZIP em memória usando fflate
         const extractedFiles = unzipSync(zipUint8Array);
 
         console.log(`Extracted ZIP file: ${plugin.plugin_name}`);
@@ -65,10 +62,9 @@ export default async function analyzer() {
         const analyser = new AstAnalyser();
         const analysisResult = analysisRecursive(extractedFiles, analyser);
 
-        // Fazer o upload dos arquivos para o Supabase Storage (bucket plugins_pending)
         const zipBlob = new Blob([zipUint8Array], { type: "application/zip" });
         const file = new File([zipBlob], `${plugin.plugin_name}.zip`, { type: "application/zip" });
-        const bucketUrl = await uploadPluginFileToPendingBucket(plugin, file);
+        const bucketUrl = await uploadPluginFileToPendingBucket(file);
 
         const analysis = { analysisResult };
 
