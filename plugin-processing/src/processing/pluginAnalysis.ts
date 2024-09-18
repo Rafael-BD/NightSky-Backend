@@ -1,8 +1,35 @@
 import { getPluginsPending, updateAnalysis, uploadPluginFileToPendingBucket } from "../services/services.ts";
 import { AstAnalyser } from "npm:@nodesecure/js-x-ray";
 import { PluginPending } from "../../../shared/types.ts";
-import { download } from "https://deno.land/x/download@v2.0.2/mod.ts";
-import { unzipSync, strFromU8 } from "npm:fflate@0.8.2"
+import { unzipSync, strFromU8 } from "npm:fflate@0.8.2";
+
+// Tipo para representar a estrutura dos arquivos extraídos
+type FileStructure = { [key: string]: FileStructure | Uint8Array };
+
+// Função recursiva para analisar todos os arquivos e pastas
+interface AnalysisResult {
+    fileName: string;
+    analysis: ReturnType<AstAnalyser['analyse']>;
+}
+
+function analysisRecursive(files: FileStructure, analyser: AstAnalyser, path: string = '', analysisResult: AnalysisResult[] = []) {
+    for (const [fileName, fileContent] of Object.entries(files)) {
+        const fullPath = path ? `${path}/${fileName}` : fileName;
+        if (fileContent instanceof Uint8Array) {
+            if (fileName.endsWith(".js")) {
+                const analysis = {
+                    fileName: fullPath,
+                    analysis: analyser.analyse(strFromU8(fileContent)),
+                };
+                analysisResult.push(analysis);
+            }
+        } else if (typeof fileContent === "object") {
+            analysisRecursive(fileContent as FileStructure, analyser, fullPath, analysisResult);
+        }
+    }
+    return analysisResult;
+}
+
 export default async function analyzer() {
     try {
         const pluginsPending = await getPluginsPending();
@@ -36,13 +63,7 @@ export default async function analyzer() {
         console.log(`Extracted ZIP file: ${plugin.plugin_name}`);
 
         const analyser = new AstAnalyser();
-        const analysisResult = [];
-        for (const [fileName, fileContent] of Object.entries(extractedFiles)) {
-            if (fileName.endsWith(".js")) {
-                const analysis = analyser.analyse(strFromU8(fileContent));
-                analysisResult.push(analysis);
-            }
-        }
+        const analysisResult = analysisRecursive(extractedFiles, analyser);
 
         // Fazer o upload dos arquivos para o Supabase Storage (bucket plugins_pending)
         const zipBlob = new Blob([zipUint8Array], { type: "application/zip" });
@@ -51,7 +72,7 @@ export default async function analyzer() {
 
         const analysis = { analysisResult };
 
-        const status = analysisResult.some((a) => a.warnings.length > 0) ? 2 : 1;
+        const status = analysisResult.some((a) => a.analysis.warnings.length > 0) ? 2 : 1;
         const updateSuccess = await updateAnalysis(plugin.plugin_id.toString(), analysis, status);
 
         if (updateSuccess) {
