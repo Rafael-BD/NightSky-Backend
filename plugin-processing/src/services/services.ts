@@ -28,12 +28,15 @@ export async function uploadPluginFileToPendingBucket(file: File): Promise<boole
 
 async function uploadPluginFileToBucket(plugin: Plugin): Promise<string | null> {
     try {
+        const pendingBucketName = 'plugins_pending';
         const bucketName = 'Plugins';
-        const bucketPath = `${plugin.plugin_name}/${plugin.plugin_name}.zip`;
+        const bucketPath = `${plugin.plugin_name}.zip`;
 
         const { data, error } = await supabaseSvc.storage
-            .from(bucketName)
-            .move(`${plugin.plugin_name}/${plugin.plugin_name}.zip`, bucketPath);
+            .from(pendingBucketName)
+            .copy(bucketPath, bucketPath, {
+                destinationBucket: bucketName
+            });
 
         if (error) {
             throw error;
@@ -89,6 +92,10 @@ export async function approvePlugin(repo_id: string, owner: string): Promise<boo
 
         const bucket_url = await uploadPluginFileToBucket(pluginPending);
 
+        if (!bucket_url) {
+            throw new Error('Error moving file to bucket');
+        }
+
         if (plugin) {
             const { error: errorUpdate } = await supabaseSvc
                 .from("plugins")
@@ -97,6 +104,7 @@ export async function approvePlugin(repo_id: string, owner: string): Promise<boo
                     categories: pluginPending.categories,
                     version: plugin.version + 1,
                     updated_at: new Date().toISOString(),
+                    created_at: plugin.created_at,
                     repo_url: pluginPending.repo_url,
                     bucket_url: bucket_url,
                     status: 1,
@@ -158,7 +166,7 @@ export async function rejectPlugin(repo_id: string, owner: string, plugin_name: 
 
         const {error: errorFiles } = await supabaseSvc.storage
             .from('plugins_pending')
-            .remove([`${plugin_name}/${plugin_name}.zip`]);
+            .remove([`${plugin_name}.zip`]);
         
         if (errorFiles) {
             throw new Error(errorFiles.message);
