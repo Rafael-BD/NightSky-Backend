@@ -40,17 +40,17 @@ async function uploadPluginFileToBucket(plugin: Plugin): Promise<string | null> 
         }
 
         if (data) {
-            const { publicUrl } = supabaseSvc.storage
+            const { data } = supabaseSvc.storage
                 .from(bucketName)
                 .getPublicUrl(bucketPath);
 
-            if (!publicUrl) {
+            if (!data.publicUrl) {
                 console.error('Error getting public URL for file:', plugin.plugin_name);
                 return null;
             }
 
             console.log('File moved successfully:', plugin.plugin_name);
-            return publicUrl;
+            return data.publicUrl;
         } else {
             console.error('File move failed: No data returned');
             return null;
@@ -95,7 +95,7 @@ export async function approvePlugin(repo_id: string, owner: string): Promise<boo
                 .update({
                     plugin_name: pluginPending.plugin_name,
                     categories: pluginPending.categories,
-                    version: pluginPending.version,
+                    version: plugin.version + 1,
                     updated_at: new Date().toISOString(),
                     repo_url: pluginPending.repo_url,
                     bucket_url: bucket_url,
@@ -117,6 +117,9 @@ export async function approvePlugin(repo_id: string, owner: string): Promise<boo
                     created_at: new Date().toISOString(),
                     repo_url: pluginPending.repo_url,
                     branch: pluginPending.branch,
+                    repo_id: pluginPending.repo_id,
+                    bucket_url: bucket_url,
+                    status: 1,
                 });
 
             if (errorInsert) {
@@ -155,8 +158,7 @@ export async function rejectPlugin(repo_id: string, owner: string, plugin_name: 
 
         const {error: errorFiles } = await supabaseSvc.storage
             .from('plugins_pending')
-            .delete()
-            .eq('plugin_name', plugin_name);
+            .remove([`${plugin_name}/${plugin_name}.zip`]);
         
         if (errorFiles) {
             throw new Error(errorFiles.message);
