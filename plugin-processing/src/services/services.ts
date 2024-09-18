@@ -38,7 +38,11 @@ async function uploadPluginFileToBucket(plugin: Plugin): Promise<string | null> 
                 destinationBucket: bucketName
             });
 
-        if (error) {
+        const { error: errorDelete } = await supabaseSvc.storage
+            .from(pendingBucketName)
+            .remove([bucketPath]);
+
+        if (error || errorDelete) {
             throw error;
         }
 
@@ -102,7 +106,7 @@ export async function approvePlugin(repo_id: string, owner: string): Promise<boo
                 .update({
                     plugin_name: pluginPending.plugin_name,
                     categories: pluginPending.categories,
-                    version: plugin.version + 1,
+                    version: pluginPending.version,
                     updated_at: new Date().toISOString(),
                     created_at: plugin.created_at,
                     repo_url: pluginPending.repo_url,
