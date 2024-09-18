@@ -1,6 +1,6 @@
 {
   "tasks": {
-    "dev": "deno run --allow-net --allow-read --allow-write --env --allow-env --allow-read=/src/plugins_extracted --allow-write=/src/plugins_extracted --allow-read=/src/plugins_downloads --allow-write=/src/plugins_downloads --watch src/server.ts"
+    "dev": "deno run --allow-net --allow-read=/src/plugins_extracted,/src/plugins_downloads --allow-write=/src/plugins_extracted,/src/plugins_downloads --env --allow-env --watch src/server.ts"
   },
   "imports": {
     "@std/assert": "jsr:@std/assert@1"

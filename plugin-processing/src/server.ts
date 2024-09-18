@@ -7,7 +7,7 @@ import cron from "./cron/config.ts";
 const app = new Application();
 
 app.use(validateMiddleware);
-app.use(rateLimiter);
+// app.use(rateLimiter);
 
 app.use(routes.routes());
 app.use(routes.allowedMethods());

@@ -1,19 +1,11 @@
 import { Plugin, PluginPending } from "../../../shared/types.ts";
 import { supabaseSvc } from "../../../shared/utils/supabaseClient.ts";
 
-async function uploadPluginFileToBucket(plugin: Plugin): Promise<string | null> {
+export async function uploadPluginFileToPendingBucket(plugin: PluginPending, file: File): Promise<string | null> {
     try {
-        const bucketName = 'Plugins';
-        const bucketPath = `${plugin.plugin_name}`;
-        const filePath = Deno.env.get("EXTRACT_PATH") + `/${plugin.plugin_name}.zip/`;
+        const bucketName = 'plugins_pending';
+        const bucketPath = `${plugin.plugin_name}/${file.name}`;
 
-        if(!filePath) {
-            console.error('Error getting file path for plugin from env:', plugin.plugin_name);
-            return null;
-        }
-
-        const file = new File([await Deno.readFile(filePath)], plugin.plugin_name);
-        
         const { data, error } = await supabaseSvc.storage
             .from(bucketName)
             .upload(bucketPath, file);
@@ -23,23 +15,58 @@ async function uploadPluginFileToBucket(plugin: Plugin): Promise<string | null> 
         }
 
         if (data) {
-            const { data } = supabaseSvc.storage
+            const { publicUrl } = supabaseSvc.storage
                 .from(bucketName)
-                .getPublicUrl(filePath);
+                .getPublicUrl(bucketPath);
 
-            if (!data) {
+            if (!publicUrl) {
                 console.error('Error getting public URL for file:', file.name);
                 return null;
             }
 
             console.log('File uploaded successfully:', file.name);
-            return data.publicUrl;
+            return publicUrl;
         } else {
             console.error('File upload failed: No data returned');
             return null;
         }
     } catch (error) {
         console.error('Error uploading file to bucket:', error);
+        return null;
+    }
+}
+
+async function uploadPluginFileToBucket(plugin: Plugin): Promise<string | null> {
+    try {
+        const bucketName = 'Plugins';
+        const bucketPath = `${plugin.plugin_name}/${plugin.plugin_name}.zip`;
+
+        const { data, error } = await supabaseSvc.storage
+            .from(bucketName)
+            .move(`${plugin.plugin_name}/${plugin.plugin_name}.zip`, bucketPath);
+
+        if (error) {
+            throw error;
+        }
+
+        if (data) {
+            const { publicUrl } = supabaseSvc.storage
+                .from(bucketName)
+                .getPublicUrl(bucketPath);
+
+            if (!publicUrl) {
+                console.error('Error getting public URL for file:', plugin.plugin_name);
+                return null;
+            }
+
+            console.log('File moved successfully:', plugin.plugin_name);
+            return publicUrl;
+        } else {
+            console.error('File move failed: No data returned');
+            return null;
+        }
+    } catch (error) {
+        console.error('Error moving file to bucket:', error);
         return null;
     }
 }
@@ -124,7 +151,7 @@ export async function approvePlugin(repo_id: string, owner: string): Promise<boo
     }
 }
 
-export async function rejectPlugin(repo_id: string, owner: string): Promise<boolean> {
+export async function rejectPlugin(repo_id: string, owner: string, plugin_name: string): Promise<boolean> {
     try {
         const { error } = await supabaseSvc
             .from("plugins_pending")
@@ -134,6 +161,15 @@ export async function rejectPlugin(repo_id: string, owner: string): Promise<bool
 
         if (error) {
             throw new Error(error.message);
+        }
+
+        const {error: errorFiles } = await supabaseSvc.storage
+            .from('plugins_pending')
+            .delete()
+            .eq('plugin_name', plugin_name);
+        
+        if (errorFiles) {
+            throw new Error(errorFiles.message);
         }
 
         return true;
@@ -177,5 +213,3 @@ export async function updateAnalysis(plugin_id: string, analysis: Record<string,
         return false;
     }
 }
-
-
