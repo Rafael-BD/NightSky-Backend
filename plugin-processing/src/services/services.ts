@@ -8,7 +8,9 @@ export async function uploadPluginFileToPendingBucket(plugin: PluginPending, fil
 
         const { data, error } = await supabaseSvc.storage
             .from(bucketName)
-            .upload(bucketPath, file);
+            .upload(bucketPath, file, {
+                contentType: 'application/zip'
+            });
 
         if (error) {
             throw error;

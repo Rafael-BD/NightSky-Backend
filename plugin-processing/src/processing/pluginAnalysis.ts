@@ -67,7 +67,7 @@ export default async function analyzer() {
 
         // Fazer o upload dos arquivos para o Supabase Storage (bucket plugins_pending)
         const zipBlob = new Blob([zipUint8Array], { type: "application/zip" });
-        const file = new File([zipBlob], `${plugin.plugin_name}.zip`);
+        const file = new File([zipBlob], `${plugin.plugin_name}.zip`, { type: "application/zip" });
         const bucketUrl = await uploadPluginFileToPendingBucket(plugin, file);
 
         const analysis = { analysisResult };
