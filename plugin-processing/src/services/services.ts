@@ -1,10 +1,11 @@
+import { uuid } from "../../../../../../AppData/Local/deno/npm/registry.npmjs.org/@supabase/auth-js/2.65.0/dist/module/lib/helpers.d.ts";
 import { Plugin, PluginPending } from "../../../shared/types.ts";
 import { supabaseSvc } from "../../../shared/utils/supabaseClient.ts";
 
-export async function uploadPluginFileToPendingBucket(file: File, id: string): Promise<boolean> {
+export async function uploadPluginFileToPendingBucket(file: File, uuid: string): Promise<boolean> {
     try {
         const bucketName = 'plugins_pending';
-        const bucketPath = `${id}.zip`;
+        const bucketPath = `${uuid}.zip`;
         // Verificar depois se ja existe um arquivo com o mesmo nome (necessário mudar a indentificação do arquivo para um id único)
 
         const { error } = await supabaseSvc.storage
@@ -31,7 +32,7 @@ async function uploadPluginFileToBucket(plugin: Plugin): Promise<string | null> 
     try {
         const pendingBucketName = 'plugins_pending';
         const bucketName = 'Plugins';
-        const bucketPath = `${plugin.plugin_id}.zip`;
+        const bucketPath = `${plugin.uuid}.zip`;
 
         const {error: errorDeleteExisting } = await supabaseSvc.storage
             .from(bucketName)
@@ -141,6 +142,7 @@ export async function approvePlugin(repo_id: string, owner: string): Promise<boo
                     repo_id: pluginPending.repo_id,
                     bucket_url: bucket_url,
                     status: 1,
+                    uuid: pluginPending.uuid,
                 });
 
             if (errorInsert) {

@@ -68,7 +68,7 @@ export default async function analyzer() {
             const appManifestString = strFromU8(appManifest);
             const appManifestObj = JSON.parse(appManifestString);
             appManifestObj.version_code = plugin.version;
-            appManifestObj.id = plugin.plugin_id.toString();
+            appManifestObj.id = plugin.uuid.toString();
 
             extractedFiles["appmanifest.json"] = new TextEncoder().encode(JSON.stringify(appManifestObj));
         }
@@ -76,7 +76,7 @@ export default async function analyzer() {
         const zipUint8ArrayUpdated = new Uint8Array(zipSync(extractedFiles));
         const zipBlob = new Blob([zipUint8ArrayUpdated], { type: "application/zip" });
         const file = new File([zipBlob], `${plugin.plugin_name}.zip`, { type: "application/zip" });
-        const ok = await uploadPluginFileToPendingBucket(file, plugin.plugin_id.toString());
+        const ok = await uploadPluginFileToPendingBucket(file, plugin.uuid);
 
         if (!ok) {
             console.error("Failed to upload ZIP file to bucket:", plugin.plugin_name);

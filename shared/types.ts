@@ -12,6 +12,7 @@ export type Plugin = {
     status: number;
     branch: string;
     version: number;
+    uuid: string;
 };
 
 export type PluginPending = {
@@ -28,6 +29,7 @@ export type PluginPending = {
     status_analysis: number;
     branch: string;
     version: number;
+    uuid: string;
 };
 
 export type Repo = {

@@ -177,7 +177,7 @@ export const updatePluginSvc = async (githubAccessToken: string, name: string, p
     // Insert new version into plugins_pending for review
     const { error } = await supabase
         .from('plugins_pending')
-        .insert([{ plugin_name: name, categories, branch, updated_at: updateTimestampz, repo_url: repoUrl, repo_id: repoId, version: newVersion, owner: uuid }]);
+        .insert([{plugin_name: name, categories, branch, updated_at: updateTimestampz, repo_url: repoUrl, repo_id: repoId, version: newVersion, owner: uuid, uuid: plugin.uuid}]);
 
     if (handleSupabaseError(error, 'Error updating plugin')) return false;
     return true;
