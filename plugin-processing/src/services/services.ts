@@ -1,10 +1,10 @@
 import { Plugin, PluginPending } from "../../../shared/types.ts";
 import { supabaseSvc } from "../../../shared/utils/supabaseClient.ts";
 
-export async function uploadPluginFileToPendingBucket(file: File): Promise<boolean> {
+export async function uploadPluginFileToPendingBucket(file: File, id: string): Promise<boolean> {
     try {
         const bucketName = 'plugins_pending';
-        const bucketPath = file.name;
+        const bucketPath = `${id}.zip`;
         // Verificar depois se ja existe um arquivo com o mesmo nome (necessário mudar a indentificação do arquivo para um id único)
 
         const { error } = await supabaseSvc.storage
@@ -31,8 +31,15 @@ async function uploadPluginFileToBucket(plugin: Plugin): Promise<string | null> 
     try {
         const pendingBucketName = 'plugins_pending';
         const bucketName = 'Plugins';
-        const bucketPath = `${plugin.plugin_name}.zip`;
-        // Verificar depois se ja existe um arquivo com o mesmo nome (necessário mudar a indentificação do arquivo para um id único)
+        const bucketPath = `${plugin.plugin_id}.zip`;
+
+        const {error: errorDeleteExisting } = await supabaseSvc.storage
+            .from(bucketName)
+            .remove([bucketPath]);
+
+        if (errorDeleteExisting) {
+            throw errorDeleteExisting;
+        }
 
         const { data, error } = await supabaseSvc.storage
             .from(pendingBucketName)

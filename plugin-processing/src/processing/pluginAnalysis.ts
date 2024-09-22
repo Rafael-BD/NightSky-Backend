@@ -76,7 +76,7 @@ export default async function analyzer() {
         const zipUint8ArrayUpdated = new Uint8Array(zipSync(extractedFiles));
         const zipBlob = new Blob([zipUint8ArrayUpdated], { type: "application/zip" });
         const file = new File([zipBlob], `${plugin.plugin_name}.zip`, { type: "application/zip" });
-        const ok = await uploadPluginFileToPendingBucket(file);
+        const ok = await uploadPluginFileToPendingBucket(file, plugin.plugin_id.toString());
 
         if (!ok) {
             console.error("Failed to upload ZIP file to bucket:", plugin.plugin_name);
