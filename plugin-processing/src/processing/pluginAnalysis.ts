@@ -1,7 +1,7 @@
 import { getPluginsPending, updateAnalysis, uploadPluginFileToPendingBucket } from "../services/services.ts";
 import { AstAnalyser } from "npm:@nodesecure/js-x-ray";
 import { PluginPending } from "../../../shared/types.ts";
-import { unzipSync, strFromU8 } from "npm:fflate@0.8.2";
+import { unzipSync, strFromU8, zipSync } from "npm:fflate@0.8.2";
 
 type FileStructure = { [key: string]: FileStructure | Uint8Array };
 
@@ -62,7 +62,19 @@ export default async function analyzer() {
         const analyser = new AstAnalyser();
         const analysisResult = analysisRecursive(extractedFiles, analyser);
 
-        const zipBlob = new Blob([zipUint8Array], { type: "application/zip" });
+        // Update appmanifest.json with new version code and plugin ID
+        const appManifest = extractedFiles["appmanifest.json"];
+        if (appManifest) {
+            const appManifestString = strFromU8(appManifest);
+            const appManifestObj = JSON.parse(appManifestString);
+            appManifestObj.version_code = plugin.version;
+            appManifestObj.id = plugin.plugin_id.toString();
+
+            extractedFiles["appmanifest.json"] = new TextEncoder().encode(JSON.stringify(appManifestObj));
+        }
+
+        const zipUint8ArrayUpdated = new Uint8Array(zipSync(extractedFiles));
+        const zipBlob = new Blob([zipUint8ArrayUpdated], { type: "application/zip" });
         const file = new File([zipBlob], `${plugin.plugin_name}.zip`, { type: "application/zip" });
         const ok = await uploadPluginFileToPendingBucket(file);
 
