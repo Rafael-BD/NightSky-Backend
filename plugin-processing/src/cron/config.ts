@@ -3,7 +3,7 @@ import analyzer from "../processing/pluginAnalysis.ts";
 
 export default function cron() {
 
-    Deno.cron("Plugin analysis", { minute: { every: 10 } }, () => {
+    Deno.cron("Plugin analysis", { minute: { every: 5 } }, () => {
         analyzer();
     });
 

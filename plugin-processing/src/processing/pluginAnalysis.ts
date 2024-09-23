@@ -64,16 +64,20 @@ export default async function analyzer() {
 
         // Update appmanifest.json with new version code and plugin ID
         const appManifest = extractedFiles["appmanifest.json"];
+        let filesUpdated = extractedFiles;
         if (appManifest) {
             const appManifestString = strFromU8(appManifest);
             const appManifestObj = JSON.parse(appManifestString);
             appManifestObj.version_code = plugin.version;
             appManifestObj.id = plugin.uuid.toString();
 
-            extractedFiles["appmanifest.json"] = new TextEncoder().encode(JSON.stringify(appManifestObj));
+            filesUpdated = {
+                ...extractedFiles,
+                "appmanifest.json": new TextEncoder().encode(JSON.stringify(appManifestObj)),
+            };
         }
 
-        const zipUint8ArrayUpdated = new Uint8Array(zipSync(extractedFiles));
+        const zipUint8ArrayUpdated = new Uint8Array(zipSync(filesUpdated));
         const zipBlob = new Blob([zipUint8ArrayUpdated], { type: "application/zip" });
         const file = new File([zipBlob], `${plugin.plugin_name}.zip`, { type: "application/zip" });
         const ok = await uploadPluginFileToPendingBucket(file, plugin.uuid);
