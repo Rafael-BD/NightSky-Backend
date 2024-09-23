@@ -64,6 +64,7 @@ export default async function analyzer() {
 
         // Update appmanifest.json with new version code and plugin ID
         const rootFolder = Object.keys(extractedFiles)[0];
+        console.log("Extracted files:", extractedFiles);
         console.log("Root folder:", extractedFiles[rootFolder] as FileStructure);
         const appManifest = (extractedFiles[rootFolder] as FileStructure)["appmanifest.json"] as Uint8Array;
         let filesUpdated = extractedFiles;
