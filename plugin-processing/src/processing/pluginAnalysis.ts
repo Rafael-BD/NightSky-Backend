@@ -55,7 +55,7 @@ export default async function analyzer() {
         const zipArrayBuffer = await response.arrayBuffer();
         const zipUint8Array = new Uint8Array(zipArrayBuffer);
 
-        const extractedFiles = unzipSync(zipUint8Array);
+        const extractedFiles: FileStructure = unzipSync(zipUint8Array);
 
         console.log(`Extracted ZIP file: ${plugin.plugin_name}`);
 
@@ -63,7 +63,8 @@ export default async function analyzer() {
         const analysisResult = analysisRecursive(extractedFiles, analyser);
 
         // Update appmanifest.json with new version code and plugin ID
-        const appManifest = extractedFiles["appmanifest.json"];
+        const rootFolder = Object.keys(extractedFiles)[0];
+        const appManifest = (extractedFiles[rootFolder] as FileStructure)["appmanifest.json"] as Uint8Array;
         let filesUpdated = extractedFiles;
         if (appManifest) {
             const appManifestString = strFromU8(appManifest);
@@ -72,9 +73,15 @@ export default async function analyzer() {
             appManifestObj.id = plugin.uuid.toString();
 
             filesUpdated = {
-                ...extractedFiles,
-                "appmanifest.json": new TextEncoder().encode(JSON.stringify(appManifestObj)),
+            ...extractedFiles,
+            [rootFolder]: {
+                ...extractedFiles[rootFolder],
+                "appmanifest.json": new TextEncoder().encode(JSON.stringify(appManifestObj)) as Uint8Array,
+            },
             };
+        }else {
+            console.error("appmanifest.json not found in ZIP file:", plugin.plugin_name);
+            return;
         }
 
         const zipUint8ArrayUpdated = new Uint8Array(zipSync(filesUpdated));
