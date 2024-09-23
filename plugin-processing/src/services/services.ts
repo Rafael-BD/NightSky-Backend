@@ -1,4 +1,3 @@
-import { uuid } from "../../../../../../AppData/Local/deno/npm/registry.npmjs.org/@supabase/auth-js/2.65.0/dist/module/lib/helpers.d.ts";
 import { Plugin, PluginPending } from "../../../shared/types.ts";
 import { supabaseSvc } from "../../../shared/utils/supabaseClient.ts";
 

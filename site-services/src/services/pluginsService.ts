@@ -5,7 +5,6 @@ import { sanitizeInput } from "../../../shared/utils/sanitizeInput.ts";
 import { getGithubUserId } from "../../../shared/utils/getGithubId.ts";
 import areValidCategories from "../utils/validateCategories.ts";
 
-const GITHUB_API_USER_URL = 'https://api.github.com/user';
 const GITHUB_API_REPOS_URL = 'https://api.github.com/user/repos';
 
 import { PostgrestError } from "npm:@supabase/supabase-js@2.45.4";
