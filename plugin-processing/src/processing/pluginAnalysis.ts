@@ -65,9 +65,8 @@ export default async function analyzer() {
         // Update appmanifest.json with new version code and plugin ID
         const rootFolder = Object.keys(extractedFiles)[0];
         const appManifest = extractedFiles[rootFolder + "appmanifest.json"];
-        console.log("extractedFiles:", extractedFiles);
-        console.log("appManifest:", appManifest);
         let filesUpdated = extractedFiles;
+        
         if (appManifest) {
             const appManifestString = strFromU8(appManifest);
             const appManifestObj = JSON.parse(appManifestString);
@@ -76,7 +75,7 @@ export default async function analyzer() {
 
             filesUpdated = {
                 ...extractedFiles,
-                "appmanifest.json": new TextEncoder().encode(JSON.stringify(appManifestObj)),
+                [rootFolder + "appmanifest.json"]: new TextEncoder().encode(JSON.stringify(appManifestObj)),
             };
         } 
         else {
