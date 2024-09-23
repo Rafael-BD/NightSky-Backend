@@ -63,7 +63,8 @@ export default async function analyzer() {
         const analysisResult = analysisRecursive(extractedFiles, analyser);
 
         // Update appmanifest.json with new version code and plugin ID
-        const appManifest = extractedFiles["appmanifest.json"];
+        const rootFolder = Object.keys(extractedFiles)[0];
+        const appManifest = extractedFiles[rootFolder + "appmanifest.json"];
         console.log("extractedFiles:", extractedFiles);
         console.log("appManifest:", appManifest);
         let filesUpdated = extractedFiles;
