@@ -10,9 +10,9 @@ export async function fetchPlugins(start: number, end: number) {
         throw new Error(error.message);
     }
     const filteredData = data.filter((plugin: { status: number; }) => plugin.status === 1)
-        .map((plugin: { plugin_id: bigint; plugin_name: string; owner: string; categories: string[]; downloads: number; version: number; updated_at: string; created_at: string; repo_url: string; bucket_url: string; }) => {
-            const { plugin_id, plugin_name, owner, categories, downloads, version, updated_at, created_at, repo_url, bucket_url } = plugin;
-            return { plugin_id, plugin_name, owner, categories, downloads, version, updated_at, created_at, repo_url, bucket_url };
+        .map((plugin: { plugin_id: bigint; plugin_name: string; owner: string; categories: string[]; downloads: number; version: number; updated_at: string; created_at: string; repo_url: string; bucket_url: string; uuid: string; }) => {
+            const { plugin_id, plugin_name, owner, categories, downloads, version, updated_at, created_at, repo_url, bucket_url, uuid } = plugin;
+            return { plugin_id, plugin_name, owner, categories, downloads, version, updated_at, created_at, repo_url, bucket_url, uuid };
         });
     return filteredData;
 }
