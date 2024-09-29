@@ -41,3 +41,27 @@ export async function fetchCategories() {
     // deno-lint-ignore no-explicit-any
     return data.map((category: any) => category.name);
 }
+
+// deno-lint-ignore no-unused-vars
+export async function addDownload(pluginId: bigint) {
+    // const { data, error: fetchError } = await supabase
+    //     .from("plugins")
+    //     .select("downloads")
+    //     .eq("plugin_id", pluginId)
+    //     .single();
+
+    // if (fetchError) {
+    //     throw new Error(fetchError.message);
+    // }
+
+    // const newDownloadCount = data.downloads + 1;
+
+    // const { error: updateError } = await supabase
+    //     .from("plugins")
+    //     .update({ downloads: newDownloadCount })
+    //     .eq("plugin_id", pluginId);
+
+    // if (updateError) {
+    //     throw new Error(updateError.message);
+    // }
+}
