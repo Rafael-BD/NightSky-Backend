@@ -1,2 +1,2 @@
-# Backend-App-Services
-Backend for mobile app services of NightSky.
+# Backend-Services
+Backend services of NightSky.
